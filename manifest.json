@@ -1,0 +1,21 @@
+{
+  "name": "Basson Elektries Command Center",
+  "short_name": "Basson Ops",
+  "description": "Operational Intelligence Hub for Basson Elektries",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d1117",
+  "theme_color": "#0d1117",
+  "icons": [
+    {
+      "src": "/assets/basson-logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/basson-logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

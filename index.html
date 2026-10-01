@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal Job Tracker All in One</title>
+    <meta name="description" content="Universal Business & Field Operations Platform with Multi-Tenant Security, Job Cards, Invoicing, Inventory, Client Sign-off, and Fleet Tracking for Car Washes, Stores, Contractors & Service Companies." />
+    <meta property="og:title" content="Universal Job Tracker All in One" />
+    <meta property="og:description" content="Universal Business & Field Operations Platform with Multi-Tenant Security, Job Cards, Invoicing, Inventory, Client Sign-off, and Fleet Tracking for Car Washes, Stores, Contractors & Service Companies." />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              border: "#334155",
+              slate: {
+                400: "#94a3b8",
+                500: "#64748b",
+                600: "#475569",
+                700: "#334155",
+                800: "#1e293b",
+                900: "#0f172a",
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" href="/assets/basson-logo.png">
+    <meta name="theme-color" content="#0d1117">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d1117;
+            overflow-x: hidden;
+            color: #94a3b8;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #0d1117;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #1e2736;
+          border-radius: 10px;
+        }
+
+        /* Input Placeholders */
+        ::placeholder {
+          color: #475569 !important;
+          font-weight: 600;
+        }
+
+        /* Document Layout Architecture (Screen Only) */
+        .document-layout {
+          display: flex;
+          align-items: flex-start;
+          gap: 24px;
+          padding: 24px;
+          min-height: 100vh;
+          background-color: #0d1117;
+        }
+
+        .document-editor {
+          width: 400px;
+          flex-shrink: 0;
+          position: sticky;
+          top: 24px;
+          max-height: calc(100vh - 48px);
+          overflow-y: auto;
+        }
+
+        .document-preview {
+          flex: 1;
+          display: flex;
+          justify-content: flex-start;
+          min-width: 0;
+        }
+
+        /* Preview card styling for screen */
+        .preview-card {
+          flex-shrink: 0;
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+          width: 210mm;
+          background: white;
+          transform-origin: top left;
+        }
+
+        @media (max-width: 1200px) {
+          .document-layout {
+            flex-direction: column;
+            padding: 16px;
+            gap: 16px;
+          }
+          .document-editor {
+            width: 100%;
+            position: relative;
+            top: 0;
+            max-height: none;
+          }
+          .document-preview {
+            width: 100%;
+            overflow-x: auto;
+            padding-bottom: 20px;
+          }
+        }
+
+        /* ---------------------------------------------------------
+           PRINT ARCHITECTURE
+           --------------------------------------------------------- */
+        
+        /* Hide print root on screen */
+        #print-root { display: none; }
+
+        @media print {
+          /* 1. Reset standard page defaults for clean output */
+          @page { 
+            margin: 0; 
+            size: A4; 
+          }
+          
+          html, body {
+            background: white !important;
+            height: auto !important;
+            overflow: visible !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+
+          /* 2. Hide all standard application containers (requested "print-only" approach) */
+          body > :not(#print-root) { 
+            display: none !important; 
+          }
+          
+          /* 3. Enable the print container exclusively */
+          #print-root {
+            display: block !important;
+            visibility: visible !important;
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 210mm !important;
+            min-height: 297mm !important;
+            background: white !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            box-shadow: none !important;
+            z-index: 999999 !important;
+          }
+          
+          /* 4. Ensure contents inside print-root are visible and maintain layout */
+          #print-root * { 
+            visibility: visible !important;
+          }
+          
+          /* Preserve flex and grid layouts for printable documents */
+          #print-root .flex { display: flex !important; }
+          #print-root .grid { display: grid !important; }
+          #print-root .hidden { display: none !important; }
+          
+          .print-page {
+            width: 210mm !important;
+            min-height: 297mm !important;
+            padding: 15mm !important;
+            box-sizing: border-box !important;
+            background: white !important;
+            color: #0f172a !important;
+            display: flex !important;
+            flex-direction: column !important;
+          }
+
+          /* 5. Force graphics and high contrast */
+          img { opacity: 1 !important; visibility: visible !important; display: block !important; }
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+<script type="importmap">
+{
+  "imports": {
+    "@google/genai": "https://esm.sh/@google/genai@^1.39.0",
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "react": "https://esm.sh/react@^19.2.4",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "react-dom": "https://esm.sh/react-dom@^19.2.4"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body class="bg-[#0d1117]">
+    <!-- Application Mount Point -->
+    <div id="root"></div>
+    
+    <!-- Dedicated Print Mount Point (outside #root to avoid clipping/hiding issues) -->
+    <div id="print-root"></div>
+
+    <script>
+      window['pdfjs-dist/build/pdf'].GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
+<script type="module" src="/index.tsx"></script>
+</body>
+</html>

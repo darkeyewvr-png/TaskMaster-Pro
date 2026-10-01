@@ -1,0 +1,117 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions for Multi-Tenant Row Level Security
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function currentUserDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function getUserCompanyId() {
+      return currentUserDoc().companyId;
+    }
+
+    function isSuperAdmin() {
+      return isAuthenticated() && (currentUserDoc().role == 'super_admin' || currentUserDoc().role == 'admin');
+    }
+
+    function isTechnician() {
+      return isAuthenticated() && (currentUserDoc().role == 'technician' || currentUserDoc().role == 'staff');
+    }
+
+    function isSameTenant(companyId) {
+      return isAuthenticated() && (getUserCompanyId() == companyId);
+    }
+
+    // 1. Companies Collection
+    match /companies/{companyId} {
+      // Any authenticated user belonging to this company can view company profile & brand styling
+      allow read: if isAuthenticated() && (request.auth.uid == companyId || getUserCompanyId() == companyId);
+      // Only Super Admin can modify company details, branding, or billing
+      allow update: if isSuperAdmin() && isSameTenant(companyId);
+      // Super Admin account setup on signup
+      allow create: if isAuthenticated();
+      allow delete: if false; // Soft delete / lock only
+    }
+
+    // 2. Users Collection
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (
+        request.auth.uid == userId || 
+        isSameTenant(resource.data.companyId)
+      );
+      // User can update their own status/shift; Super Admin can invite/edit staff in their company
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && (
+        request.auth.uid == userId || 
+        (isSuperAdmin() && isSameTenant(resource.data.companyId))
+      );
+      allow delete: if isSuperAdmin() && isSameTenant(resource.data.companyId);
+    }
+
+    // 3. Jobs Collection
+    match /jobs/{jobId} {
+      // Must match tenant companyId
+      allow read: if isAuthenticated() && (
+        resource.data.companyId == getUserCompanyId()
+      );
+      // Create new jobs: Super Admins can create; Technicians can log emergency callouts
+      allow create: if isAuthenticated() && (
+        request.resource.data.companyId == getUserCompanyId()
+      );
+      // Update jobs: Super Admin can edit any job; Tech can update status, checklist, signature, photos of assigned job
+      allow update: if isAuthenticated() && (
+        resource.data.companyId == getUserCompanyId() &&
+        (isSuperAdmin() || resource.data.assignedTechUid == request.auth.uid || !('assignedTechUid' in resource.data))
+      );
+      // Delete jobs: Super Admin only
+      allow delete: if isSuperAdmin() && resource.data.companyId == getUserCompanyId();
+    }
+
+    // 4. Compliance & Inspection Reports Collection
+    match /complianceReports/{reportId} {
+      allow read: if isAuthenticated() && resource.data.companyId == getUserCompanyId();
+      allow create: if isAuthenticated() && request.resource.data.companyId == getUserCompanyId();
+      allow update: if isAuthenticated() && resource.data.companyId == getUserCompanyId();
+      allow delete: if isSuperAdmin() && resource.data.companyId == getUserCompanyId();
+    }
+
+    // 5. Clients Collection
+    match /clients/{clientId} {
+      allow read: if isAuthenticated() && resource.data.companyId == getUserCompanyId();
+      allow create, update: if isAuthenticated() && request.resource.data.companyId == getUserCompanyId();
+      allow delete: if isSuperAdmin() && resource.data.companyId == getUserCompanyId();
+    }
+
+    // 6. Invoices & Quotes (Billing) Collection
+    match /billing/{docId} {
+      allow read: if isAuthenticated() && resource.data.companyId == getUserCompanyId();
+      // Only Super Admin can create, modify, or delete financial invoices
+      allow create, update: if isSuperAdmin() && request.resource.data.companyId == getUserCompanyId();
+      allow delete: if isSuperAdmin() && resource.data.companyId == getUserCompanyId();
+    }
+
+    // 7. Inventory & Stock Takes Collection
+    match /stockTakes/{stockId} {
+      allow read: if isAuthenticated() && resource.data.companyId == getUserCompanyId();
+      allow create, update: if isAuthenticated() && request.resource.data.companyId == getUserCompanyId();
+      allow delete: if isSuperAdmin() && resource.data.companyId == getUserCompanyId();
+    }
+
+    // 8. Staff Shift Logs & Locations
+    match /shiftLogs/{shiftId} {
+      allow read: if isAuthenticated() && resource.data.companyId == getUserCompanyId();
+      allow create, update: if isAuthenticated() && request.resource.data.companyId == getUserCompanyId();
+      allow delete: if isSuperAdmin() && resource.data.companyId == getUserCompanyId();
+    }
+
+    match /locations/{locationId} {
+      allow read: if isAuthenticated() && resource.data.companyId == getUserCompanyId();
+      allow write: if isAuthenticated() && request.auth.uid == locationId;
+    }
+  }
+}
