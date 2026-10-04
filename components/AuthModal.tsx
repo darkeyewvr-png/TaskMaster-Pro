@@ -200,22 +200,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             >
               🔧 {companies[0]?.name?.split(' ')[0] || 'Field'} Staff
             </button>
-            {companies.length > 1 && (
-              <>
-                <button
-                  onClick={() => handleQuickPersona(1, 'super_admin')}
-                  className="p-2 bg-[#0d1117] hover:bg-slate-800 border border-slate-800 rounded-xl text-left text-amber-300 font-bold truncate"
-                >
-                  🏢 {companies[1]?.name?.split(' ')[0] || 'Tenant B'} Admin
-                </button>
-                <button
-                  onClick={() => handleQuickPersona(1, 'technician')}
-                  className="p-2 bg-[#0d1117] hover:bg-slate-800 border border-slate-800 rounded-xl text-left text-amber-300 font-bold truncate"
-                >
-                  🔧 {companies[1]?.name?.split(' ')[0] || 'Tenant B'} Staff
-                </button>
-              </>
-            )}
           </div>
         </div>
 

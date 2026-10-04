@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { StaffUser, Company } from '../types';
+import { signInWithSupabase, signUpWithSupabase, signInDemoPersona } from '../src/lib/supabase';
 
 interface AuthScreenProps {
   companies: Company[];
@@ -13,16 +14,14 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   onOpenCompanySignup,
 }) => {
   const [tab, setTab] = useState<'login' | 'signup'>('login');
-  const [selectedCompanyId, setSelectedCompanyId] = useState<string>(companies[0]?.id || '');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [newCompanyName, setNewCompanyName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const selectedCompany = companies.find(c => c.id === selectedCompanyId) || companies[0];
-
-  const handleEmailAuth = (e: React.FormEvent) => {
+  const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
     if (!email.trim()) {
@@ -31,60 +30,59 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
     }
 
     setIsSubmitting(true);
-    setTimeout(() => {
-      const comp = selectedCompany || companies[0];
-      const userRole = email.toLowerCase().includes('tech') || email.toLowerCase().includes('staff') 
-        ? 'technician' 
-        : 'super_admin';
-
-      const user: StaffUser = {
-        uid: 'usr_' + Math.random().toString(36).substring(2, 9),
-        companyId: comp.id,
-        email: email.trim(),
-        name: name.trim() || email.split('@')[0],
-        role: userRole,
-        specialty: userRole === 'super_admin' ? 'Operations & Management' : 'Service & Field Specialist',
-        isWorking: false,
-      };
-
+    try {
+      if (tab === 'login') {
+        // Authenticate with Supabase and pull profile strictly from Supabase profiles.company_id
+        const result = await signInWithSupabase(email.trim(), password, companies);
+        setIsSubmitting(false);
+        onLogin(result.user, result.company);
+      } else {
+        // Sign Up with Supabase
+        const companyTitle = newCompanyName.trim() || `${name.trim()}'s Services`;
+        const result = await signUpWithSupabase(
+          email.trim(),
+          password,
+          name.trim() || email.split('@')[0],
+          companyTitle,
+          companies
+        );
+        setIsSubmitting(false);
+        onLogin(result.user, result.company);
+      }
+    } catch (err: any) {
+      console.error('Supabase Auth error:', err);
+      // Helpful fallback message
+      setErrorMessage(err?.message || 'Authentication failed. Please verify credentials.');
       setIsSubmitting(false);
-      onLogin(user, comp);
-    }, 400);
+    }
   };
 
-  const handleGoogleOAuth = () => {
+  const handleGoogleOAuth = async () => {
     setIsSubmitting(true);
     setErrorMessage(null);
-    setTimeout(() => {
-      const comp = selectedCompany || companies[0];
-      const user: StaffUser = {
-        uid: 'usr_google_' + Math.random().toString(36).substring(2, 8),
-        companyId: comp.id,
-        email: 'verified.operator@gmail.com',
-        name: 'Google Verified User',
-        role: 'super_admin',
-        specialty: 'Operations Lead & Owner',
-        isWorking: false,
-      };
+    try {
+      // Connects to Supabase default demo operator
+      const result = await signInDemoPersona('owner@aquashine.co.za', companies);
       setIsSubmitting(false);
-      onLogin(user, comp);
-    }, 450);
+      onLogin(result.user, result.company);
+    } catch (err: any) {
+      setErrorMessage(err?.message || 'OAuth authentication failed.');
+      setIsSubmitting(false);
+    }
   };
 
-  const handleQuickPersona = (companyIdx: number, role: 'super_admin' | 'technician') => {
-    const comp = companies[companyIdx] || companies[0];
-    const companyShort = comp.name.split(' ')[0];
-    
-    const user: StaffUser = {
-      uid: `${role}_${comp.id}`,
-      companyId: comp.id,
-      email: `${role.toLowerCase()}@${comp.slug || 'company'}.co.za`,
-      name: role === 'super_admin' ? `${companyShort} Owner` : `${companyShort} Field Staff`,
-      role,
-      specialty: role === 'super_admin' ? 'Managing Director & Operations' : 'Lead Specialist',
-      isWorking: role === 'technician',
-    };
-    onLogin(user, comp);
+  const handleQuickPersona = async (demoEmail: string) => {
+    setIsSubmitting(true);
+    setErrorMessage(null);
+    try {
+      // Pulls strictly from Supabase profiles.company_id for this persona
+      const result = await signInDemoPersona(demoEmail, companies);
+      setIsSubmitting(false);
+      onLogin(result.user, result.company);
+    } catch (err: any) {
+      setErrorMessage(err?.message || 'Failed to authenticate evaluation persona.');
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -103,8 +101,12 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
             Universal Operations
           </h1>
           <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto font-medium">
-            Multi-Tenant Job Cards, Quotes, Invoicing &amp; Fleet Management for modern service businesses.
+            Strict Multi-Tenant Job Cards, Quotes, Invoicing &amp; Fleet Management.
           </p>
+          <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-900/80 border border-slate-800 text-[10px] text-slate-400">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+            <span>Tenant bound strictly to <strong className="text-slate-300 font-mono">profiles.company_id</strong></span>
+          </div>
         </div>
 
         {/* Auth Card */}
@@ -131,7 +133,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                   : 'text-slate-400 hover:text-white'
               }`}
             >
-              Create Account
+              Register Account
             </button>
           </div>
 
@@ -154,7 +156,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
           <div className="relative flex py-2 items-center mb-5">
             <div className="flex-grow border-t border-slate-800"></div>
             <span className="flex-shrink mx-3 text-slate-500 text-[10px] font-black uppercase tracking-widest">
-              Or Work Email
+              Or Work Credentials
             </span>
             <div className="flex-grow border-t border-slate-800"></div>
           </div>
@@ -167,38 +169,35 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
 
           {/* Form */}
           <form onSubmit={handleEmailAuth} className="space-y-4">
-            {/* Organization Selector */}
-            <div>
-              <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider block mb-1">
-                Company / Organization
-              </label>
-              <select
-                value={selectedCompanyId}
-                onChange={e => setSelectedCompanyId(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-[#0d1117] border border-slate-800 rounded-xl text-white text-xs outline-none focus:border-blue-500 font-bold"
-              >
-                {companies.map(c => (
-                  <option key={c.id} value={c.id}>
-                    {c.name} ({c.subscriptionTier.toUpperCase()})
-                  </option>
-                ))}
-              </select>
-            </div>
-
             {tab === 'signup' && (
-              <div>
-                <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider block mb-1">
-                  Full Name
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Alex Morgan"
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-[#0d1117] border border-slate-800 rounded-xl text-white text-xs outline-none focus:border-blue-500 font-medium"
-                />
-              </div>
+              <>
+                <div>
+                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider block mb-1">
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Alex Morgan"
+                    value={name}
+                    onChange={e => setName(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-[#0d1117] border border-slate-800 rounded-xl text-white text-xs outline-none focus:border-blue-500 font-medium"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider block mb-1">
+                    Company / Organization Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Precision Detailing &amp; Services"
+                    value={newCompanyName}
+                    onChange={e => setNewCompanyName(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-[#0d1117] border border-slate-800 rounded-xl text-white text-xs outline-none focus:border-blue-500 font-medium"
+                  />
+                </div>
+              </>
             )}
 
             <div>
@@ -208,7 +207,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
               <input
                 type="email"
                 required
-                placeholder="e.g. operator@company.co.za"
+                placeholder="e.g. owner@aquashine.co.za"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 className="w-full px-4 py-2.5 bg-[#0d1117] border border-slate-800 rounded-xl text-white text-xs outline-none focus:border-blue-500 font-medium"
@@ -244,10 +243,10 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
               {isSubmitting ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>Authenticating...</span>
+                  <span>Verifying with Supabase...</span>
                 </>
               ) : (
-                <span>{tab === 'login' ? 'Sign In to Workspace' : 'Create Staff Account'}</span>
+                <span>{tab === 'login' ? 'Sign In & Load Organization' : 'Create Account & Company'}</span>
               )}
             </button>
           </form>
@@ -256,67 +255,72 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
           <div className="mt-8 pt-5 border-t border-slate-800/80">
             <div className="flex items-center justify-between mb-2">
               <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">
-                ⚡ 1-Click Evaluation Personas:
+                ⚡ 1-Click Evaluation Accounts:
               </span>
-              <span className="text-[8px] uppercase tracking-wider text-slate-500">Instant Access</span>
+              <span className="text-[8px] uppercase tracking-wider text-slate-500 font-mono">
+                profiles.company_id
+              </span>
             </div>
+            <p className="text-[10px] text-slate-500 mb-3">
+              Each account is strictly bound to its own Supabase tenant. Company switching without logout is forbidden.
+            </p>
             
             <div className="grid grid-cols-2 gap-2 text-[10px]">
               <button
                 type="button"
-                onClick={() => handleQuickPersona(0, 'super_admin')}
+                disabled={isSubmitting}
+                onClick={() => handleQuickPersona('owner@aquashine.co.za')}
                 className="p-2.5 bg-[#0d1117] hover:bg-slate-800 border border-slate-800 hover:border-blue-500/40 rounded-xl text-left transition group"
               >
                 <div className="font-bold text-white group-hover:text-blue-400 truncate">
-                  🚗 Car Wash Admin
+                  🚗 AquaShine Owner
                 </div>
                 <div className="text-[9px] text-slate-500 truncate mt-0.5">
-                  {companies[0]?.name || 'AquaShine Valet'}
+                  Tenant: AquaShine Valet
                 </div>
               </button>
 
               <button
                 type="button"
-                onClick={() => handleQuickPersona(0, 'technician')}
+                disabled={isSubmitting}
+                onClick={() => handleQuickPersona('tech@aquashine.co.za')}
                 className="p-2.5 bg-[#0d1117] hover:bg-slate-800 border border-slate-800 hover:border-blue-500/40 rounded-xl text-left transition group"
               >
                 <div className="font-bold text-white group-hover:text-blue-400 truncate">
-                  🔧 Valet Detailer (Tech)
+                  🔧 AquaShine Tech
                 </div>
                 <div className="text-[9px] text-slate-500 truncate mt-0.5">
-                  Field execution view
+                  Tenant: AquaShine Valet
                 </div>
               </button>
 
-              {companies.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() => handleQuickPersona(1, 'super_admin')}
-                  className="p-2.5 bg-[#0d1117] hover:bg-slate-800 border border-slate-800 hover:border-emerald-500/40 rounded-xl text-left transition group"
-                >
-                  <div className="font-bold text-white group-hover:text-emerald-400 truncate">
-                    🔨 Labour Services
-                  </div>
-                  <div className="text-[9px] text-slate-500 truncate mt-0.5">
-                    {companies[1]?.name || 'Cornerstone Labour'}
-                  </div>
-                </button>
-              )}
+              <button
+                type="button"
+                disabled={isSubmitting}
+                onClick={() => handleQuickPersona('owner@cornerstone.co.za')}
+                className="p-2.5 bg-[#0d1117] hover:bg-slate-800 border border-slate-800 hover:border-emerald-500/40 rounded-xl text-left transition group"
+              >
+                <div className="font-bold text-white group-hover:text-emerald-400 truncate">
+                  🔨 Cornerstone Director
+                </div>
+                <div className="text-[9px] text-slate-500 truncate mt-0.5">
+                  Tenant: Cornerstone Labour
+                </div>
+              </button>
 
-              {companies.length > 2 && (
-                <button
-                  type="button"
-                  onClick={() => handleQuickPersona(2, 'super_admin')}
-                  className="p-2.5 bg-[#0d1117] hover:bg-slate-800 border border-slate-800 hover:border-amber-500/40 rounded-xl text-left transition group"
-                >
-                  <div className="font-bold text-white group-hover:text-amber-400 truncate">
-                    🏪 Store Owner
-                  </div>
-                  <div className="text-[9px] text-slate-500 truncate mt-0.5">
-                    {companies[2]?.name || 'Metro Retail'}
-                  </div>
-                </button>
-              )}
+              <button
+                type="button"
+                disabled={isSubmitting}
+                onClick={() => handleQuickPersona('owner@metroexpress.co.za')}
+                className="p-2.5 bg-[#0d1117] hover:bg-slate-800 border border-slate-800 hover:border-amber-500/40 rounded-xl text-left transition group"
+              >
+                <div className="font-bold text-white group-hover:text-amber-400 truncate">
+                  🏪 Metro Retail Owner
+                </div>
+                <div className="text-[9px] text-slate-500 truncate mt-0.5">
+                  Tenant: Metro Supplies
+                </div>
+              </button>
             </div>
           </div>
 
@@ -327,14 +331,14 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
               onClick={onOpenCompanySignup}
               className="text-xs text-blue-400 hover:text-blue-300 font-bold uppercase tracking-wider transition hover:underline"
             >
-              + Register New Business / Tenant Company
+              + Register New Independent Organization
             </button>
           </div>
         </div>
 
         {/* Footer */}
         <p className="text-center text-[10px] text-slate-600 mt-6 uppercase font-bold tracking-wider">
-          Universal Operations Multi-Tenant Platform &bull; End-to-End Field Services
+          Universal Operations Multi-Tenant Platform &bull; Enforced Supabase RLS
         </p>
       </div>
     </div>

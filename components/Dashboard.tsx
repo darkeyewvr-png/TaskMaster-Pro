@@ -17,7 +17,6 @@ interface DashboardProps {
   onOpenStockTake?: () => void;
   onOpenMap?: () => void;
   onOpenSubscription?: () => void;
-  onOpenTenantSwitcher?: () => void;
   onOpenCompliance?: () => void;
   onExportToDiscord?: () => Promise<void>;
 }
@@ -38,7 +37,6 @@ const Dashboard: React.FC<DashboardProps> = ({
   onOpenStockTake,
   onOpenMap,
   onOpenSubscription,
-  onOpenTenantSwitcher,
   onOpenCompliance,
   onExportToDiscord,
 }) => {
@@ -203,15 +201,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
         {/* Action Button Bar */}
         <div className="flex flex-wrap items-center gap-2">
-          {onOpenTenantSwitcher && (
-            <button
-              onClick={onOpenTenantSwitcher}
-              className="bg-[#0d1117] hover:bg-slate-800 text-slate-300 hover:text-white px-3.5 py-2.5 rounded-2xl border border-slate-700 transition flex items-center gap-2 text-xs font-bold"
-              title="Switch Tenant or Role"
-            >
-              <span>🏢 Switch Tenant</span>
-            </button>
-          )}
+
 
           {isSuperAdmin && onOpenSubscription && (
             <button

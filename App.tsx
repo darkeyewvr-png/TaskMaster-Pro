@@ -27,11 +27,11 @@ import LiveMap from './components/LiveMap';
 import StaffList from './components/StaffList';
 import { SubscriptionBillingModal } from './components/SubscriptionBillingModal';
 import { CompanySignupModal } from './components/CompanySignupModal';
-import { TenantSwitcherModal } from './components/TenantSwitcherModal';
 import { AuthModal } from './components/AuthModal';
 import { AuthScreen } from './components/AuthScreen';
 import { GlobalSearchModal } from './components/GlobalSearchModal';
 import { AIElectricalAssistantModal } from './components/AIElectricalAssistantModal';
+import { supabase, fetchUserProfileAndCompany } from './src/lib/supabase';
 
 function cleanForFirestore(obj: any): any {
   if (obj === null || typeof obj !== 'object') return obj;
@@ -51,10 +51,14 @@ function cleanForFirestore(obj: any): any {
   return cleaned;
 }
 
+export const AQUASHINE_ID = 'a0000000-0000-4000-a000-000000000001';
+export const CORNERSTONE_ID = 'b0000000-0000-4000-b000-000000000002';
+export const METRO_ID = 'c0000000-0000-4000-c000-000000000003';
+
 // Pre-seeded Multi-Tenant Independent Companies (Car Wash, General Labour, Retail Store)
 const INITIAL_COMPANIES: Company[] = [
   {
-    id: 'comp_aquashine_001',
+    id: AQUASHINE_ID,
     name: 'AquaShine Auto Valet & Car Wash',
     slug: 'aquashine-valet',
     registrationNumber: '2024/091823/07',
@@ -77,7 +81,7 @@ const INITIAL_COMPANIES: Company[] = [
     createdAt: '2026-01-01T00:00:00.000Z',
   },
   {
-    id: 'comp_cornerstone_002',
+    id: CORNERSTONE_ID,
     name: 'Cornerstone Labour & Field Services',
     slug: 'cornerstone-labour',
     registrationNumber: '2023/182910/07',
@@ -100,7 +104,7 @@ const INITIAL_COMPANIES: Company[] = [
     createdAt: '2026-02-15T00:00:00.000Z',
   },
   {
-    id: 'comp_metro_003',
+    id: METRO_ID,
     name: 'Metro Express Retail & Store Supplies',
     slug: 'metro-retail',
     registrationNumber: '2022/448102/07',
@@ -124,13 +128,13 @@ const INITIAL_COMPANIES: Company[] = [
   },
 ];
 
-// Pre-seeded Tenant Users
+// Pre-seeded Tenant Users mapped by strict company_id
 const SEED_STAFF_BY_COMPANY: Record<string, StaffUser[]> = {
-  comp_aquashine_001: [
+  [AQUASHINE_ID]: [
     {
-      uid: 'alex-owner-01',
-      companyId: 'comp_aquashine_001',
-      email: 'alex@aquashinevalet.co.za',
+      uid: '0880a5c2-4ee2-4908-a337-7dd01d3eb0ef',
+      companyId: AQUASHINE_ID,
+      email: 'owner@aquashine.co.za',
       name: 'Alex Morgan',
       role: 'super_admin',
       specialty: 'Detailing Operations Manager & Owner',
@@ -138,9 +142,9 @@ const SEED_STAFF_BY_COMPANY: Record<string, StaffUser[]> = {
       isWorking: false,
     },
     {
-      uid: 'thabo-valet-02',
-      companyId: 'comp_aquashine_001',
-      email: 'thabo@aquashinevalet.co.za',
+      uid: '102f1f29-7296-486e-8fe4-0cbd73ce8763',
+      companyId: AQUASHINE_ID,
+      email: 'tech@aquashine.co.za',
       name: 'Thabo Ndlovu',
       role: 'technician',
       specialty: 'Lead Valet Specialist & Paint Correction',
@@ -148,47 +152,63 @@ const SEED_STAFF_BY_COMPANY: Record<string, StaffUser[]> = {
       isWorking: false,
     },
   ],
-  comp_cornerstone_002: [
+  comp_aquashine_001: [
     {
-      uid: 'gerrit-admin-01',
-      companyId: 'comp_cornerstone_002',
-      email: 'gerrit@cornerstonefield.co.za',
-      name: 'Gerrit Basson',
+      uid: '0880a5c2-4ee2-4908-a337-7dd01d3eb0ef',
+      companyId: AQUASHINE_ID,
+      email: 'owner@aquashine.co.za',
+      name: 'Alex Morgan',
       role: 'super_admin',
-      specialty: 'Field Services Director',
-      phone: '083 444 0183',
+      specialty: 'Detailing Operations Manager & Owner',
+      phone: '082 555 0192',
       isWorking: false,
     },
+  ],
+  [CORNERSTONE_ID]: [
     {
-      uid: 'kobus-tech-02',
-      companyId: 'comp_cornerstone_002',
-      email: 'kobus@cornerstonefield.co.za',
+      uid: '77f24a1f-e564-4ffc-93dc-66d64823d0bb',
+      companyId: CORNERSTONE_ID,
+      email: 'owner@cornerstone.co.za',
       name: 'Kobus van der Merwe',
-      role: 'technician',
-      specialty: 'Commercial Maintenance & Pressure Washing',
-      phone: '071 333 0174',
+      role: 'super_admin',
+      specialty: 'Field Operations & General Contractor',
+      phone: '083 111 2233',
+      isWorking: false,
+    },
+  ],
+  comp_cornerstone_002: [
+    {
+      uid: '77f24a1f-e564-4ffc-93dc-66d64823d0bb',
+      companyId: CORNERSTONE_ID,
+      email: 'owner@cornerstone.co.za',
+      name: 'Kobus van der Merwe',
+      role: 'super_admin',
+      specialty: 'Field Operations & General Contractor',
+      phone: '083 111 2233',
+      isWorking: false,
+    },
+  ],
+  [METRO_ID]: [
+    {
+      uid: 'acaa36cb-f75e-4da7-8e10-d8f93419221d',
+      companyId: METRO_ID,
+      email: 'owner@metroexpress.co.za',
+      name: 'Liam Pillay',
+      role: 'super_admin',
+      specialty: 'Store General Manager & Inventory Lead',
+      phone: '084 444 5566',
       isWorking: false,
     },
   ],
   comp_metro_003: [
     {
-      uid: 'sarah-manager-01',
-      companyId: 'comp_metro_003',
-      email: 'sarah@metroexpress.co.za',
-      name: 'Sarah Jenkins',
-      role: 'super_admin',
-      specialty: 'Store General Manager',
-      phone: '082 111 4455',
-      isWorking: false,
-    },
-    {
-      uid: 'liam-inventory-02',
-      companyId: 'comp_metro_003',
-      email: 'liam@metroexpress.co.za',
+      uid: 'acaa36cb-f75e-4da7-8e10-d8f93419221d',
+      companyId: METRO_ID,
+      email: 'owner@metroexpress.co.za',
       name: 'Liam Pillay',
-      role: 'technician',
-      specialty: 'Inventory & POS Fixtures Specialist',
-      phone: '084 777 2233',
+      role: 'super_admin',
+      specialty: 'Store General Manager & Inventory Lead',
+      phone: '084 444 5566',
       isWorking: false,
     },
   ],
@@ -337,36 +357,12 @@ const App: React.FC = () => {
     }
   });
 
-  const [activeCompanyId, setActiveCompanyId] = useState<string>(() => {
-    try {
-      const saved = localStorage.getItem('saas_active_company_id');
-      const found = INITIAL_COMPANIES.find(c => c.id === saved);
-      return found ? found.id : INITIAL_COMPANIES[0].id;
-    } catch {
-      return INITIAL_COMPANIES[0].id;
-    }
-  });
-
-  const activeCompany = useMemo(() => {
-    return companies.find(c => c.id === activeCompanyId) || companies[0] || INITIAL_COMPANIES[0];
-  }, [companies, activeCompanyId]);
-
-  // Save companies and active ID to storage
-  useEffect(() => {
-    localStorage.setItem('saas_contractor_companies', JSON.stringify(companies));
-  }, [companies]);
-
-  useEffect(() => {
-    localStorage.setItem('saas_active_company_id', activeCompany.id);
-  }, [activeCompany.id]);
-
   // 2. Current Operator User & Role State (Defaults to null - logged out state)
   const [currentOperator, setCurrentOperator] = useState<StaffUser | null>(() => {
     try {
       const saved = localStorage.getItem('saas_current_operator');
       if (saved) {
         const parsed = JSON.parse(saved);
-        // Exclude legacy mock Wayne van Rooyen
         if (
           parsed?.uid &&
           parsed.uid !== 'wayne-owner-01' &&
@@ -378,9 +374,53 @@ const App: React.FC = () => {
         }
       }
     } catch {}
-    // Default to null (logged out state)
     return null;
   });
+
+  // Strict Multi-Tenancy: active company_id is strictly derived from logged-in user profile (profiles.company_id)
+  const activeCompanyId = currentOperator?.companyId || AQUASHINE_ID;
+
+  const activeCompany = useMemo(() => {
+    return (
+      companies.find(c => c.id === activeCompanyId) ||
+      companies.find(c => c.id === 'comp_aquashine_001') ||
+      companies[0] ||
+      INITIAL_COMPANIES[0]
+    );
+  }, [companies, activeCompanyId]);
+
+  // Persist companies
+  useEffect(() => {
+    localStorage.setItem('saas_contractor_companies', JSON.stringify(companies));
+  }, [companies]);
+
+  // Check Supabase session on mount and bind strictly to profiles.company_id
+  useEffect(() => {
+    const checkSupabaseSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          const { profile, company } = await fetchUserProfileAndCompany(session.user.id, companies);
+          if (profile?.company_id && company) {
+            const staffUser: StaffUser = {
+              uid: session.user.id,
+              companyId: profile.company_id, // Strictly pulled from profiles.company_id
+              email: session.user.email || '',
+              name: profile.full_name || session.user.email?.split('@')[0],
+              role: profile.role === 'technician' ? 'technician' : 'super_admin',
+              specialty: profile.role === 'technician' ? 'Field Technician' : 'Operations & Management',
+              isWorking: profile.role === 'technician',
+            };
+            setCurrentOperator(staffUser);
+            setCompanies(prev => prev.some(c => c.id === company.id) ? prev : [company, ...prev]);
+          }
+        }
+      } catch (e) {
+        console.warn('[Supabase] Initial session check notice:', e);
+      }
+    };
+    checkSupabaseSession();
+  }, []);
 
   useEffect(() => {
     if (currentOperator) {
@@ -392,10 +432,9 @@ const App: React.FC = () => {
 
   const isSuperAdmin = currentOperator?.role === 'super_admin' || currentOperator?.role === 'admin';
 
-  // 3. Modals State
+  // 3. Modals State (TenantSwitcherModal removed for strict multi-tenancy)
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [showCompanySignupModal, setShowCompanySignupModal] = useState(false);
-  const [showTenantSwitcherModal, setShowTenantSwitcherModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [showAIModal, setShowAIModal] = useState(false);
@@ -557,27 +596,15 @@ const App: React.FC = () => {
     }
   }, [isDarkMode]);
 
-  // Handlers for Tenant Switching & Auth
+  // Handler for Authenticated Login (Supabase profile company_id strictly enforced)
   const handleSelectTenant = (company: Company, user?: StaffUser) => {
-    setActiveCompanyId(company.id);
     if (user) {
       setCurrentOperator(user);
-    } else {
-      const staffForCompany = allStaff[company.id] || [];
-      if (staffForCompany.length > 0) {
-        setCurrentOperator(staffForCompany[0]);
-      } else {
-        setCurrentOperator({
-          uid: 'user_' + Date.now(),
-          companyId: company.id,
-          email: company.email || 'owner@' + company.slug + '.co.za',
-          name: company.name + ' Admin',
-          role: 'super_admin',
-          specialty: 'Operations & Management',
-          isWorking: false,
-        });
-      }
     }
+    setCompanies(prev => {
+      const exists = prev.some(c => c.id === company.id);
+      return exists ? prev : [company, ...prev];
+    });
     setView('dashboard');
   };
 
@@ -587,7 +614,6 @@ const App: React.FC = () => {
       ...prev,
       [newCompany.id]: [owner],
     }));
-    setActiveCompanyId(newCompany.id);
     setCurrentOperator(owner);
     setShowCompanySignupModal(false);
     setView('dashboard');
@@ -597,7 +623,12 @@ const App: React.FC = () => {
     setCompanies(prev => prev.map(c => c.id === updated.id ? updated : c));
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (e) {
+      console.warn('[Supabase] Signout notice:', e);
+    }
     setCurrentOperator(null);
     localStorage.removeItem('saas_current_operator');
     setView('dashboard');
@@ -791,10 +822,10 @@ const App: React.FC = () => {
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
           {/* Tenant Identity & Branding */}
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => setShowTenantSwitcherModal(true)}
-              className="flex items-center gap-2.5 p-1.5 hover:bg-slate-800/80 rounded-2xl transition border border-slate-800 text-left group"
-              title="Switch Tenant / Organization"
+            {/* Locked Multi-Tenancy Organization Badge (Strictly derived from profiles.company_id) */}
+            <div
+              className="flex items-center gap-2.5 p-1.5 rounded-2xl border border-slate-800 bg-[#161b22]/70 text-left select-none"
+              title={`Active Organization: ${activeCompany.name} (Strictly bound to Supabase profile)`}
             >
               {activeCompany.logoUrl ? (
                 <img src={activeCompany.logoUrl} alt={activeCompany.name} className="w-8 h-8 rounded-xl object-contain bg-white/5 p-1" />
@@ -808,21 +839,21 @@ const App: React.FC = () => {
               )}
               <div className="hidden sm:block">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-black text-white group-hover:text-blue-400 transition leading-none truncate max-w-[180px]">
+                  <span className="text-xs font-black text-white leading-none truncate max-w-[190px]">
                     {activeCompany.name}
                   </span>
-                  <span className="text-[10px] text-slate-500">▼</span>
+                  <span className="text-[9px] text-slate-400" title="Strict multi-tenant isolation locked to profile">🔒</span>
                 </div>
                 <div className="flex items-center gap-1 mt-0.5">
                   <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-950/40 px-1 rounded border border-emerald-500/20">
                     {activeCompany.subscriptionTier?.toUpperCase()}
                   </span>
-                  <span className="text-[9px] text-slate-500">
+                  <span className="text-[9px] text-slate-400">
                     • {tenantJobs.length} Jobs
                   </span>
                 </div>
               </div>
-            </button>
+            </div>
           </div>
 
           {/* Center Navigation Bar */}
@@ -944,7 +975,6 @@ const App: React.FC = () => {
             onOpenStockTake={() => setView('stock-take')}
             onOpenMap={() => setView('live-track')}
             onOpenSubscription={() => setShowSubscriptionModal(true)}
-            onOpenTenantSwitcher={() => setShowTenantSwitcherModal(true)}
           />
         )}
 
@@ -1154,14 +1184,6 @@ const App: React.FC = () => {
         </button>
 
         <button
-          onClick={() => setShowTenantSwitcherModal(true)}
-          className="flex flex-col items-center gap-1 p-1 text-slate-400 hover:text-white"
-        >
-          <span className="text-base">🏢</span>
-          <span>Tenant</span>
-        </button>
-
-        <button
           onClick={handleLogout}
           className="flex flex-col items-center gap-1 p-1 text-slate-400 hover:text-red-400"
           title="Sign Out"
@@ -1183,16 +1205,6 @@ const App: React.FC = () => {
         onClose={() => setShowSubscriptionModal(false)}
         company={activeCompany}
         onUpdateCompany={handleUpdateCompany}
-      />
-
-      <TenantSwitcherModal
-        isOpen={showTenantSwitcherModal}
-        onClose={() => setShowTenantSwitcherModal(false)}
-        companies={companies}
-        activeCompany={activeCompany}
-        currentOperator={currentOperator}
-        onSelectTenant={handleSelectTenant}
-        onOpenCompanySignup={() => setShowCompanySignupModal(true)}
       />
 
       <AuthModal
