@@ -176,7 +176,8 @@ const DocumentDetail: React.FC<DocumentDetailProps> = ({
 
   const handleWhatsAppShare = () => {
     const docNum = existingDoc?.invoiceNumber || existingDoc?.documentNumber || (mode === 'quote' ? 'QUOTE DRAFT' : 'INVOICE DRAFT');
-    let message = `⚡ *Basson Elektries (PTY) LTD*\n`;
+    const compName = company?.name || 'Commercial Services';
+    let message = `🏢 *${compName}*\n`;
     message += `📄 *${mode.toUpperCase()}: ${docNum}*\n`;
     message += `👤 *Client:* ${clientId || 'Client'}\n`;
     message += `📍 *Site:* ${address || 'On File'}\n\n`;
@@ -194,13 +195,13 @@ const DocumentDetail: React.FC<DocumentDetailProps> = ({
     message += `\n💰 *Total Due:* R ${grandTotal.toLocaleString()}\n`;
     
     if (mode === 'invoice') {
-      message += `\n*Banking Details for EFT:*\nBank: FNB\nAccount: 63105432982\nBranch: 256655\nRef: ${docNum}\n`;
-      if (paymentTerms && !paymentTerms.toLowerCase().includes('7')) {
+      message += `\n*Payment Ref:* ${docNum}\n`;
+      if (paymentTerms) {
         message += `*Payment Terms:* ${paymentTerms}\n`;
       }
     }
 
-    message += `\nThank you for choosing Basson Elektries!`;
+    message += `\nThank you for choosing ${compName}!`;
     
     const encoded = encodeURIComponent(message);
     const phoneClean = contactDetails.replace(/[^0-9]/g, '');
@@ -450,7 +451,7 @@ const DocumentDetail: React.FC<DocumentDetailProps> = ({
               <div className="flex justify-between items-center">
                 <div>
                   <h3 className="text-sm font-black uppercase tracking-wider text-white">Professional Labour & Call-out</h3>
-                  <p className="text-[10px] text-slate-500">Hourly technical rates, COC inspection fees, and callouts</p>
+                  <p className="text-[10px] text-slate-500">Hourly technical rates, service fees, and callouts</p>
                 </div>
                 <div className="flex gap-2">
                   <button
@@ -730,7 +731,7 @@ const DocumentDetail: React.FC<DocumentDetailProps> = ({
           company={company}
           data={{
             type: mode === 'quote' ? 'QUOTE' : 'INVOICE',
-            companyId: company?.id || 'comp_basson_001',
+            companyId: company?.id || 'comp_default_001',
             documentNumber: existingDoc?.documentNumber || existingDoc?.invoiceNumber || (mode === 'quote' ? 'QTE-DRAFT' : 'INV-DRAFT'),
             jobId,
             clientId,

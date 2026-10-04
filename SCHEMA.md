@@ -46,12 +46,12 @@ This multi-tenant SaaS platform provides strict logical tenant isolation at the 
 ### `users` Collection (`/users/{uid}`)
 ```json
 {
-  "uid": "usr_wayne_01",
-  "companyId": "comp_basson_001",
-  "email": "wayne@bassonelektries.co.za",
-  "name": "Wayne van Rooyen",
+  "uid": "usr_operator_01",
+  "companyId": "comp_aquashine_001",
+  "email": "alex@aquashinevalet.co.za",
+  "name": "Alex Morgan",
   "role": "super_admin",
-  "specialty": "Master Electrician & Field Operations",
+  "specialty": "Operations Manager & Business Lead",
   "phone": "082 555 0192",
   "isWorking": true,
   "lastShiftToggle": "2026-10-01T07:30:00.000Z",
@@ -64,17 +64,17 @@ This multi-tenant SaaS platform provides strict logical tenant isolation at the 
 ```json
 {
   "id": "job_94821",
-  "companyId": "comp_basson_001",
+  "companyId": "comp_aquashine_001",
   "jobNumber": "JOB-2026-089",
-  "clientId": "Protea Hotel Waterfront",
+  "clientId": "Protea Hotel Fleet",
   "phone": "021 555 9182",
   "email": "maintenance@proteawaterfront.co.za",
   "location": "Portswood Rd, V&A Waterfront, Cape Town",
-  "category": "DB Board Rewiring & Upgrade",
+  "category": "Standard Service",
   "priority": "HIGH",
   "status": "WORKING",
-  "assignedTechUid": "usr_wayne_01",
-  "technician": "Wayne van Rooyen",
+  "assignedTechUid": "usr_operator_01",
+  "technician": "Alex Morgan",
   "startDate": "2026-10-01T08:00:00.000Z",
   "endDate": "2026-10-01T17:00:00.000Z",
   "notes": "Emergency main switch tripping intermittently under load.",
@@ -103,7 +103,7 @@ This multi-tenant SaaS platform provides strict logical tenant isolation at the 
   "reportNumber": "COC-2026-0042",
   "type": "COC_ELECTRICAL",
   "status": "PASSED",
-  "inspectorName": "Wayne van Rooyen",
+  "inspectorName": "Alex Morgan",
   "inspectorRegNumber": "EIR-ZA-48291",
   "inspectionDate": "2026-10-01T12:30:00.000Z",
   "siteAddress": "Portswood Rd, V&A Waterfront, Cape Town",
@@ -122,7 +122,7 @@ This multi-tenant SaaS platform provides strict logical tenant isolation at the 
   "photos": [
     { "id": "ph1", "url": "data:...", "caption": "Earth electrode test spike", "tag": "Earth Spike", "timestamp": "2026-10-01T12:00:00Z" }
   ],
-  "inspectorSignature": { "signerName": "Wayne van Rooyen", "signedAt": "2026-10-01T13:00:00Z" },
+  "inspectorSignature": { "signerName": "Alex Morgan", "signedAt": "2026-10-01T13:00:00Z" },
   "clientSignature": { "signerName": "David Smith (Estate Mgr)", "signedAt": "2026-10-01T13:15:00Z" }
 }
 ```

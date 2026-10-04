@@ -259,7 +259,7 @@ export const OperatorSwitcherModal: React.FC<OperatorSwitcherModalProps> = ({
                   <input
                     required
                     type="text"
-                    placeholder="e.g. Wayne van Rooyen"
+                    placeholder="e.g. Alex Morgan"
                     value={formName}
                     onChange={e => setFormName(e.target.value)}
                     className="w-full bg-[#161b22] border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-blue-500 font-bold"
@@ -273,7 +273,7 @@ export const OperatorSwitcherModal: React.FC<OperatorSwitcherModalProps> = ({
                   <input
                     required
                     type="email"
-                    placeholder="e.g. wayne@bassonelektries.co.za"
+                    placeholder="e.g. operator@company.co.za"
                     value={formEmail}
                     onChange={e => setFormEmail(e.target.value)}
                     className="w-full bg-[#161b22] border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-blue-500"
@@ -323,12 +323,12 @@ export const OperatorSwitcherModal: React.FC<OperatorSwitcherModalProps> = ({
                     <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
                       Rank Title / Designation
                     </label>
-                    <span className="text-[8px] text-amber-400 font-bold uppercase">Displayed on Job Cards & COC</span>
+                    <span className="text-[8px] text-amber-400 font-bold uppercase">Displayed on Job Cards & Documents</span>
                   </div>
                   <input
                     type="text"
                     list="rank-presets"
-                    placeholder="e.g. Master Electrician & Field Operations"
+                    placeholder="e.g. Operations Manager / Lead Valet / Store Supervisor"
                     value={formSpecialty}
                     onChange={e => setFormSpecialty(e.target.value)}
                     className="w-full bg-[#161b22] border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-blue-500 font-medium"
@@ -395,7 +395,7 @@ export const OperatorSwitcherModal: React.FC<OperatorSwitcherModalProps> = ({
 
         {/* Footer */}
         <div className="p-4 bg-[#0d1117] border-t border-slate-800 flex justify-between items-center text-[10px] text-slate-500 px-6">
-          <span>Basson Elektries Personnel Registry</span>
+          <span>Staff &amp; Personnel Registry</span>
           <button onClick={onClose} className="text-slate-400 hover:text-white font-black uppercase text-[10px] tracking-wider">
             Close
           </button>

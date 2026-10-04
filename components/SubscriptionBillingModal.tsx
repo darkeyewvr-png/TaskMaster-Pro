@@ -416,7 +416,7 @@ export const SubscriptionBillingModal: React.FC<SubscriptionBillingModalProps> =
                     type="text"
                     value={logoUrl}
                     onChange={e => setLogoUrl(e.target.value)}
-                    placeholder="/assets/basson-logo.png or https://example.com/logo.png"
+                    placeholder="https://example.com/logo.png or /assets/logo.png"
                     className="flex-1 px-4 py-3 bg-[#0d1117] border border-slate-800 rounded-xl text-white font-medium text-sm focus:border-blue-500 outline-none"
                   />
                   {logoUrl && (

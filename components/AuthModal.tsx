@@ -32,17 +32,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setTimeout(() => {
       // Find matching or default company
       const comp = companies[0] || {
-        id: 'comp_basson_001',
-        name: 'Basson Elektries (PTY) LTD',
-        brandColor: '#2563eb',
+        id: 'comp_aquashine_001',
+        name: 'AquaShine Auto Valet & Car Wash',
+        brandColor: '#0284c7',
         currency: 'ZAR',
         currencySymbol: 'R',
         taxRate: 15,
         subscriptionTier: 'pro',
         subscriptionStatus: 'active',
-        phone: '063 086 5287',
-        email: 'gerrit@bassonelektries.co.za',
-        address: 'Brackenfell, Cape Town',
+        phone: '021 439 8812',
+        email: 'info@aquashinevalet.co.za',
+        address: '22 Main Road, Sea Point, Cape Town',
         createdAt: new Date().toISOString(),
       };
 
@@ -141,7 +141,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <input
                 type="text"
                 required
-                placeholder="e.g. Wayne van Rooyen"
+                placeholder="e.g. Alex Morgan"
                 value={name}
                 onChange={e => setName(e.target.value)}
                 className="w-full mt-1 px-4 py-2.5 bg-[#0d1117] border border-slate-800 rounded-xl text-white text-xs outline-none focus:border-blue-500"
@@ -154,7 +154,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <input
               type="email"
               required
-              placeholder="e.g. tech@bassonelektries.co.za"
+              placeholder="e.g. operator@company.co.za"
               value={email}
               onChange={e => setEmail(e.target.value)}
               className="w-full mt-1 px-4 py-2.5 bg-[#0d1117] border border-slate-800 rounded-xl text-white text-xs outline-none focus:border-blue-500"
@@ -190,29 +190,29 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           <div className="grid grid-cols-2 gap-2 text-[10px]">
             <button
               onClick={() => handleQuickPersona(0, 'super_admin')}
-              className="p-2 bg-[#0d1117] hover:bg-slate-800 border border-slate-800 rounded-xl text-left text-slate-300 font-bold"
+              className="p-2 bg-[#0d1117] hover:bg-slate-800 border border-slate-800 rounded-xl text-left text-slate-300 font-bold truncate"
             >
-              👑 Basson Owner (Admin)
+              👑 {companies[0]?.name?.split(' ')[0] || 'Business'} Admin
             </button>
             <button
               onClick={() => handleQuickPersona(0, 'technician')}
-              className="p-2 bg-[#0d1117] hover:bg-slate-800 border border-slate-800 rounded-xl text-left text-slate-300 font-bold"
+              className="p-2 bg-[#0d1117] hover:bg-slate-800 border border-slate-800 rounded-xl text-left text-slate-300 font-bold truncate"
             >
-              🔧 Basson Tech (Field)
+              🔧 {companies[0]?.name?.split(' ')[0] || 'Field'} Staff
             </button>
             {companies.length > 1 && (
               <>
                 <button
                   onClick={() => handleQuickPersona(1, 'super_admin')}
-                  className="p-2 bg-[#0d1117] hover:bg-slate-800 border border-slate-800 rounded-xl text-left text-amber-300 font-bold"
+                  className="p-2 bg-[#0d1117] hover:bg-slate-800 border border-slate-800 rounded-xl text-left text-amber-300 font-bold truncate"
                 >
-                  🏢 Apex Owner (Tenant B)
+                  🏢 {companies[1]?.name?.split(' ')[0] || 'Tenant B'} Admin
                 </button>
                 <button
                   onClick={() => handleQuickPersona(1, 'technician')}
-                  className="p-2 bg-[#0d1117] hover:bg-slate-800 border border-slate-800 rounded-xl text-left text-amber-300 font-bold"
+                  className="p-2 bg-[#0d1117] hover:bg-slate-800 border border-slate-800 rounded-xl text-left text-amber-300 font-bold truncate"
                 >
-                  🔧 Apex Tech (Tenant B)
+                  🔧 {companies[1]?.name?.split(' ')[0] || 'Tenant B'} Staff
                 </button>
               </>
             )}

@@ -321,7 +321,7 @@ const StaffList: React.FC<StaffListProps> = ({
                   <input
                     required
                     type="email"
-                    placeholder="e.g. dawie@bassonelektries.co.za"
+                    placeholder="e.g. staff@mycompany.co.za"
                     value={formEmail}
                     onChange={e => setFormEmail(e.target.value)}
                     className="w-full bg-[#161b22] border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-blue-500"
@@ -373,7 +373,7 @@ const StaffList: React.FC<StaffListProps> = ({
                   <input
                     type="text"
                     list="staff-rank-presets"
-                    placeholder="e.g. Installation Electrician (COC Accredited)"
+                    placeholder="e.g. Operations Manager / Lead Valet / Store Supervisor"
                     value={formSpecialty}
                     onChange={e => setFormSpecialty(e.target.value)}
                     className="w-full bg-[#161b22] border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-blue-500 font-medium"

@@ -95,6 +95,7 @@ export interface BillingDocument {
   paymentTerms?: string;
   dueDate?: any;
   status?: 'PAID' | 'UNPAID' | 'OVERDUE' | 'DRAFT';
+  createdAt?: any;
 }
 
 export interface StockItem {
@@ -121,11 +122,15 @@ export interface StockTake {
 export interface ShiftLog {
   id?: string;
   companyId: string;
-  uid: string;
-  email: string;
+  uid?: string;
+  userId?: string;
+  email?: string;
   userName?: string;
-  startTime: any; // Firestore Timestamp
-  endTime: any;   // Firestore Timestamp | null
+  startTime?: any; // Firestore Timestamp
+  endTime?: any;   // Firestore Timestamp | null
+  clockIn?: any;
+  clockOut?: any;
+  durationHours?: number;
   status: 'active' | 'completed';
 }
 
@@ -134,7 +139,7 @@ export interface StaffUser {
   companyId: string;
   email: string;
   name?: string;
-  role: 'super_admin' | 'technician';
+  role: UserRole;
   isWorking: boolean;
   lastShiftToggle?: any;
   phone?: string;

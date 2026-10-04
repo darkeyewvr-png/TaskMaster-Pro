@@ -29,6 +29,7 @@ import { SubscriptionBillingModal } from './components/SubscriptionBillingModal'
 import { CompanySignupModal } from './components/CompanySignupModal';
 import { TenantSwitcherModal } from './components/TenantSwitcherModal';
 import { AuthModal } from './components/AuthModal';
+import { AuthScreen } from './components/AuthScreen';
 import { GlobalSearchModal } from './components/GlobalSearchModal';
 import { AIElectricalAssistantModal } from './components/AIElectricalAssistantModal';
 
@@ -127,10 +128,10 @@ const INITIAL_COMPANIES: Company[] = [
 const SEED_STAFF_BY_COMPANY: Record<string, StaffUser[]> = {
   comp_aquashine_001: [
     {
-      uid: 'wayne-owner-01',
+      uid: 'alex-owner-01',
       companyId: 'comp_aquashine_001',
-      email: 'wayne@aquashinevalet.co.za',
-      name: 'Wayne van Rooyen',
+      email: 'alex@aquashinevalet.co.za',
+      name: 'Alex Morgan',
       role: 'super_admin',
       specialty: 'Detailing Operations Manager & Owner',
       phone: '082 555 0192',
@@ -227,8 +228,8 @@ const SEED_JOBS_AQUASHINE: Job[] = [
     category: 'Standard Service',
     priority: 'MEDIUM',
     status: 'OPEN',
-    assignedTechUid: 'wayne-owner-01',
-    technician: 'Wayne van Rooyen',
+    assignedTechUid: 'alex-owner-01',
+    technician: 'Alex Morgan',
     startDate: new Date().toISOString().split('T')[0],
     endDate: new Date().toISOString().split('T')[0],
     notes: 'Routine weekly fleet wash for 5 delivery vans.',
@@ -359,33 +360,37 @@ const App: React.FC = () => {
     localStorage.setItem('saas_active_company_id', activeCompany.id);
   }, [activeCompany.id]);
 
-  // 2. Current Operator User & Role State
-  const [currentOperator, setCurrentOperator] = useState<StaffUser>(() => {
+  // 2. Current Operator User & Role State (Defaults to null - logged out state)
+  const [currentOperator, setCurrentOperator] = useState<StaffUser | null>(() => {
     try {
       const saved = localStorage.getItem('saas_current_operator');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed?.uid) return parsed;
+        // Exclude legacy mock Wayne van Rooyen
+        if (
+          parsed?.uid &&
+          parsed.uid !== 'wayne-owner-01' &&
+          parsed.uid !== 'user_default' &&
+          parsed.email !== 'wayne@aquashinevalet.co.za' &&
+          parsed.name !== 'Wayne van Rooyen'
+        ) {
+          return parsed;
+        }
       }
     } catch {}
-    const defaultStaff = SEED_STAFF_BY_COMPANY[INITIAL_COMPANIES[0].id]?.[0];
-    return defaultStaff || {
-      uid: 'user_default',
-      companyId: INITIAL_COMPANIES[0].id,
-      email: 'owner@business.co.za',
-      name: 'Business Owner',
-      role: 'super_admin',
-      specialty: 'Operations & Management',
-      phone: '082 000 0000',
-      isWorking: false,
-    };
+    // Default to null (logged out state)
+    return null;
   });
 
   useEffect(() => {
-    localStorage.setItem('saas_current_operator', JSON.stringify(currentOperator));
+    if (currentOperator) {
+      localStorage.setItem('saas_current_operator', JSON.stringify(currentOperator));
+    } else {
+      localStorage.removeItem('saas_current_operator');
+    }
   }, [currentOperator]);
 
-  const isSuperAdmin = currentOperator.role === 'super_admin' || currentOperator.role === 'admin';
+  const isSuperAdmin = currentOperator?.role === 'super_admin' || currentOperator?.role === 'admin';
 
   // 3. Modals State
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
@@ -528,7 +533,7 @@ const App: React.FC = () => {
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [selectedStockTakeId, setSelectedStockTakeId] = useState<string | null>(null);
   const [initialData, setInitialData] = useState<any>(null);
-  const [isWorking, setIsWorking] = useState(currentOperator.isWorking || false);
+  const [isWorking, setIsWorking] = useState(currentOperator?.isWorking || false);
 
   // Keyboard shortcut for Global Search (Cmd+K / Ctrl+K)
   useEffect(() => {
@@ -590,6 +595,12 @@ const App: React.FC = () => {
 
   const handleUpdateCompany = (updated: Company) => {
     setCompanies(prev => prev.map(c => c.id === updated.id ? updated : c));
+  };
+
+  const handleLogout = () => {
+    setCurrentOperator(null);
+    localStorage.removeItem('saas_current_operator');
+    setView('dashboard');
   };
 
   // Job Actions
@@ -755,6 +766,24 @@ const App: React.FC = () => {
     return allBilling.find(b => b.id === selectedDocId);
   }, [allBilling, selectedDocId]);
 
+  // If user is not authenticated, show the Sign In / Sign Up page by default
+  if (!currentOperator) {
+    return (
+      <div className={`min-h-screen ${isDarkMode ? 'dark bg-[#0d1117]' : 'bg-slate-50'}`}>
+        <AuthScreen
+          companies={companies}
+          onLogin={handleSelectTenant}
+          onOpenCompanySignup={() => setShowCompanySignupModal(true)}
+        />
+        <CompanySignupModal
+          isOpen={showCompanySignupModal}
+          onClose={() => setShowCompanySignupModal(false)}
+          onCompanyCreated={handleCompanyCreated}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className={`min-h-screen flex flex-col font-sans ${isDarkMode ? 'dark bg-[#0d1117] text-slate-100' : 'bg-slate-50 text-slate-900'}`}>
       {/* SaaS Multi-Tenant Header */}
@@ -871,6 +900,7 @@ const App: React.FC = () => {
             <button
               onClick={() => setShowAuthModal(true)}
               className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#161b22] hover:bg-slate-800 border border-slate-800 transition"
+              title="Switch Operator Persona"
             >
               <span className={`w-2 h-2 rounded-full ${isWorking ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'}`} />
               <div className="text-left hidden md:block">
@@ -881,6 +911,15 @@ const App: React.FC = () => {
                   {isSuperAdmin ? 'Super Admin' : 'Field Operator'}
                 </p>
               </div>
+            </button>
+
+            <button
+              onClick={handleLogout}
+              className="p-2.5 rounded-xl bg-[#161b22] hover:bg-red-500/20 text-slate-400 hover:text-red-400 border border-slate-800 hover:border-red-500/40 transition flex items-center gap-1.5"
+              title="Sign Out"
+            >
+              <span>🚪</span>
+              <span className="hidden xl:inline text-[10px] font-black uppercase tracking-wider">Log Out</span>
             </button>
           </div>
         </div>
@@ -1120,6 +1159,15 @@ const App: React.FC = () => {
         >
           <span className="text-base">🏢</span>
           <span>Tenant</span>
+        </button>
+
+        <button
+          onClick={handleLogout}
+          className="flex flex-col items-center gap-1 p-1 text-slate-400 hover:text-red-400"
+          title="Sign Out"
+        >
+          <span className="text-base">🚪</span>
+          <span>Log Out</span>
         </button>
       </div>
 

@@ -133,7 +133,7 @@ const JobDetail: React.FC<JobDetailProps> = ({
 
   const handleWhatsAppShare = () => {
     const jobNum = formData.jobNumber || 'DRAFT';
-    let message = `⚡ *Basson Elektries Job Ticket - ${jobNum}*\n`;
+    let message = `🏢 *${compName} Job Ticket - ${jobNum}*\n`;
     message += `👤 *Client:* ${formData.clientId || 'Pending'}\n`;
     message += `📍 *Site:* ${formData.location || 'N/A'}\n`;
     message += `🚨 *Priority:* ${formData.priority}\n`;

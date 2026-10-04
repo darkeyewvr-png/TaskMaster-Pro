@@ -8,12 +8,21 @@ import { GoogleGenAI, Type } from "@google/genai";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Initialize Firebase Admin
+// Initialize Firebase Admin safely
 if (!admin.apps.length) {
-  admin.initializeApp();
+  try {
+    admin.initializeApp();
+  } catch (e) {
+    console.warn("Firebase Admin initialized without default credentials:", e);
+  }
 }
 
-const db = admin.firestore();
+let db: any = null;
+try {
+  db = admin.firestore();
+} catch (e) {
+  console.warn("Firestore not available in server context:", e);
+}
 
 // Lazy initialization for Gemini AI
 let aiClient: GoogleGenAI | null = null;
@@ -33,7 +42,7 @@ const SPECIALTY_CONTEXT = UNIVERSAL_BUSINESS_CONTEXT;
 
 async function startServer() {
   const app = express();
-  const PORT = Number(process.env.PORT) || 3000;
+  const PORT = process.env.NODE_ENV === "production" ? (Number(process.env.PORT) || 8080) : 3000;
 
   app.use(cors());
   app.use(express.json({ limit: '10mb' }));
@@ -926,7 +935,7 @@ ${st?.notes ? `*Notes:* ${st.notes}` : ''}
   if (process.env.NODE_ENV !== "production") {
     const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: { middlewareMode: true, hmr: false },
       appType: "spa",
     });
     app.use(vite.middlewares);

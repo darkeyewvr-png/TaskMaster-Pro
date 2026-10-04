@@ -93,7 +93,7 @@ export const TenantSwitcherModal: React.FC<TenantSwitcherModalProps> = ({
                           email: comp.email,
                           name: `${comp.name.split(' ')[0]} Owner`,
                           role: 'super_admin',
-                          specialty: 'Managing Director & Certifying Officer',
+                          specialty: 'Operations Director & Business Owner',
                           isWorking: false,
                         };
                         onSelectTenant(comp, adminUser);
@@ -114,9 +114,9 @@ export const TenantSwitcherModal: React.FC<TenantSwitcherModalProps> = ({
                           uid: `tech_${comp.id}`,
                           companyId: comp.id,
                           email: `tech@${comp.email.split('@')[1] || 'domain.com'}`,
-                          name: `Field Tech (${comp.name.split(' ')[0]})`,
+                          name: `Field Staff (${comp.name.split(' ')[0]})`,
                           role: 'technician',
-                          specialty: 'Site Electrician & Test Technician',
+                          specialty: 'Field Technician & Service Specialist',
                           isWorking: true,
                         };
                         onSelectTenant(comp, techUser);
