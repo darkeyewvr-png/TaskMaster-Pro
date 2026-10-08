@@ -26,6 +26,7 @@ import LocationTracker from './components/LocationTracker';
 import LiveMap from './components/LiveMap';
 import StaffList from './components/StaffList';
 import { SubscriptionBillingModal } from './components/SubscriptionBillingModal';
+import { PricingPage } from './components/PricingPage';
 import { CompanySignupModal } from './components/CompanySignupModal';
 import { AuthModal } from './components/AuthModal';
 import { AuthScreen } from './components/AuthScreen';
@@ -611,13 +612,27 @@ const App: React.FC = () => {
   ], [activeCompany.id]);
 
   // View state
-  const [view, setView] = useState<'dashboard' | 'job-logs' | 'quotes' | 'invoices' | 'clients' | 'client-detail' | 'job-edit' | 'quote-edit' | 'invoice-edit' | 'stock-take' | 'live-track' | 'staff' | 'subscription'>('dashboard');
+  const [view, setView] = useState<'dashboard' | 'job-logs' | 'quotes' | 'invoices' | 'clients' | 'client-detail' | 'job-edit' | 'quote-edit' | 'invoice-edit' | 'stock-take' | 'live-track' | 'staff' | 'subscription' | 'pricing'>('dashboard');
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [selectedStockTakeId, setSelectedStockTakeId] = useState<string | null>(null);
   const [initialData, setInitialData] = useState<any>(null);
   const [isWorking, setIsWorking] = useState(currentOperator?.isWorking || false);
+
+  // Listen for /pricing or PayFast callback redirect
+  useEffect(() => {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('subscription') === 'success') {
+        alert('PayFast Payment Received! Your TaskMaster Pro subscription is active.');
+      } else if (urlParams.get('subscription') === 'cancelled') {
+        setView('pricing');
+      } else if (window.location.pathname.includes('/pricing') || window.location.hash.includes('pricing')) {
+        setView('pricing');
+      }
+    } catch {}
+  }, []);
 
   // Keyboard shortcut for Global Search (Cmd+K / Ctrl+K)
   useEffect(() => {
@@ -945,6 +960,12 @@ const App: React.FC = () => {
             >
               Team
             </button>
+            <button
+              onClick={() => setView('pricing')}
+              className={`px-3 py-2 rounded-xl transition ${view === 'pricing' ? 'bg-blue-600 text-white font-black' : 'hover:text-white hover:bg-slate-800/60 text-emerald-400 font-bold'}`}
+            >
+              💎 Pricing
+            </button>
             {isSuperAdmin && (
               <button
                 onClick={() => setShowSubscriptionModal(true)}
@@ -1020,6 +1041,7 @@ const App: React.FC = () => {
             onOpenStockTake={() => setView('stock-take')}
             onOpenMap={() => setView('live-track')}
             onOpenSubscription={() => setShowSubscriptionModal(true)}
+            onOpenPricing={() => setView('pricing')}
           />
         )}
 
@@ -1192,6 +1214,14 @@ const App: React.FC = () => {
             onDeleteStaff={handleDeleteStaff}
           />
         )}
+
+        {view === 'pricing' && (
+          <PricingPage
+            company={activeCompany}
+            currentOperator={currentOperator}
+            onBack={() => setView('dashboard')}
+          />
+        )}
       </main>
 
       {/* Mobile Bottom Navigation Bar (No COC button) */}
@@ -1229,6 +1259,15 @@ const App: React.FC = () => {
         </button>
 
         <button
+          onClick={() => setView('pricing')}
+          className={`flex flex-col items-center gap-1 p-1 ${view === 'pricing' ? 'text-emerald-400 font-black' : 'text-slate-400 hover:text-white'}`}
+          title="Pricing Plans"
+        >
+          <span className="text-base">💎</span>
+          <span>Pricing</span>
+        </button>
+
+        <button
           onClick={handleLogout}
           className="flex flex-col items-center gap-1 p-1 text-slate-400 hover:text-red-400"
           title="Sign Out"
@@ -1249,6 +1288,7 @@ const App: React.FC = () => {
         isOpen={showSubscriptionModal}
         onClose={() => setShowSubscriptionModal(false)}
         company={activeCompany}
+        currentOperator={currentOperator}
         onUpdateCompany={handleUpdateCompany}
       />
 

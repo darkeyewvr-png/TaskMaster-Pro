@@ -2,9 +2,43 @@ export type JobStatus = "OPEN" | "WORKING" | "ON_HOLD" | "DONE";
 export type JobPriority = "EMERGENCY" | "HIGH" | "MEDIUM" | "ROUTINE";
 export type UserRole = 'super_admin' | 'technician' | 'admin' | 'staff';
 
-export type SubscriptionTier = 'starter' | 'pro' | 'enterprise';
+export type SubscriptionTier = 'basic' | 'starter' | 'pro' | 'enterprise';
 export type SubscriptionStatus = 'active' | 'trial' | 'past_due' | 'cancelled';
 export type CurrencyCode = 'ZAR' | 'USD' | 'EUR' | 'GBP';
+
+export interface Plan {
+  id: string;
+  name: string;
+  amount: number; // Price in ZAR
+  billingFrequency: string; // '3' = Monthly in PayFast
+  features: string[];
+}
+
+export const SUBSCRIPTION_PLANS: Plan[] = [
+  {
+    id: 'basic',
+    name: 'Basic',
+    amount: 299.00,
+    billingFrequency: '3',
+    features: ['Up to 5 Users', 'Basic Job Tracking', 'Standard Support'],
+  },
+  {
+    id: 'pro',
+    name: 'Pro',
+    amount: 599.00,
+    billingFrequency: '3',
+    features: ['Up to 20 Users', 'Advanced Job & Inventory Tracking', 'Priority Support'],
+  },
+  {
+    id: 'enterprise',
+    name: 'Enterprise',
+    amount: 1299.00,
+    billingFrequency: '3',
+    features: ['Unlimited Users', 'Full System Access', 'Custom Integrations & 24/7 Support'],
+  },
+];
+
+export { handlePayFastCheckout } from './src/lib/payfast';
 
 export interface Company {
   id: string;

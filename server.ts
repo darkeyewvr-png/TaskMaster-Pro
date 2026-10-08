@@ -178,12 +178,13 @@ async function startServer() {
       }
 
       const tierPricing: Record<string, { monthly: number; yearly: number }> = {
-        starter: { monthly: 499, yearly: 4990 },
-        pro: { monthly: 1299, yearly: 12990 },
-        enterprise: { monthly: 2999, yearly: 29990 }
+        basic: { monthly: 299, yearly: 2990 },
+        starter: { monthly: 299, yearly: 2990 },
+        pro: { monthly: 599, yearly: 5990 },
+        enterprise: { monthly: 1299, yearly: 12990 }
       };
 
-      const amount = tierPricing[tier]?.[billingCycle as 'monthly' | 'yearly'] || 1299;
+      const amount = tierPricing[tier]?.[billingCycle as 'monthly' | 'yearly'] || (tier === 'basic' ? 299 : tier === 'pro' ? 599 : 1299);
       const sessionId = `sess_${gateway}_${Math.random().toString(36).substring(2, 10)}`;
 
       res.json({

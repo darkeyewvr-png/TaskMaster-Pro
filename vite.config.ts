@@ -18,6 +18,9 @@ export default defineConfig(({ mode }) => {
         'process.env.NEXT_PUBLIC_SUPABASE_URL': JSON.stringify(env.NEXT_PUBLIC_SUPABASE_URL || ''),
         'process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY': JSON.stringify(env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''),
         'process.env.SUPABASE_SERVICE_ROLE_KEY': JSON.stringify(env.SUPABASE_SERVICE_ROLE_KEY || ''),
+        'process.env.VITE_PAYFAST_MERCHANT_ID': JSON.stringify(env.VITE_PAYFAST_MERCHANT_ID || '17605261'),
+        'process.env.VITE_PAYFAST_MERCHANT_KEY': JSON.stringify(env.VITE_PAYFAST_MERCHANT_KEY || 'nopkbqwnsppxi'),
+        'process.env.PAYFAST_PASSPHRASE': JSON.stringify(env.PAYFAST_PASSPHRASE || 'Y0KCqqbhelK7Q02tlib'),
       },
       resolve: {
         alias: {

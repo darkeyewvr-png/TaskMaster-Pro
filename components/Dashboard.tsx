@@ -17,6 +17,7 @@ interface DashboardProps {
   onOpenStockTake?: () => void;
   onOpenMap?: () => void;
   onOpenSubscription?: () => void;
+  onOpenPricing?: () => void;
   onOpenCompliance?: () => void;
   onExportToDiscord?: () => Promise<void>;
 }
@@ -37,6 +38,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   onOpenStockTake,
   onOpenMap,
   onOpenSubscription,
+  onOpenPricing,
   onOpenCompliance,
   onExportToDiscord,
 }) => {
@@ -209,6 +211,15 @@ const Dashboard: React.FC<DashboardProps> = ({
               className="bg-[#0d1117] hover:bg-slate-800 text-amber-400 hover:text-amber-300 px-3.5 py-2.5 rounded-2xl border border-slate-700 transition flex items-center gap-2 text-xs font-bold"
             >
               <span>💳 SaaS Billing</span>
+            </button>
+          )}
+
+          {onOpenPricing && (
+            <button
+              onClick={onOpenPricing}
+              className="bg-[#0d1117] hover:bg-slate-800 text-emerald-400 hover:text-emerald-300 px-3.5 py-2.5 rounded-2xl border border-slate-700 transition flex items-center gap-2 text-xs font-bold"
+            >
+              <span>💎 TaskMaster Pricing</span>
             </button>
           )}
 
