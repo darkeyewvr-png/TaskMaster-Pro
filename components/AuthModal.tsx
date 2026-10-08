@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { StaffUser, Company } from '../types';
+import { signInWithGoogleOAuth } from '../src/lib/supabase';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
@@ -61,22 +63,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }, 500);
   };
 
-  const handleGoogleOAuth = () => {
+  const handleGoogleOAuth = async () => {
     setIsSubmitting(true);
-    setTimeout(() => {
-      const comp = companies[0];
-      const user: StaffUser = {
-        uid: 'usr_google_oauth_' + Math.random().toString(36).substring(2, 7),
-        companyId: comp.id,
-        email: 'authenticated.user@gmail.com',
-        name: 'Google Verified User',
-        role: 'super_admin',
-        isWorking: false,
-      };
+    setErrorMessage(null);
+    try {
+      await signInWithGoogleOAuth('https://www.taskmasterpro.co.za');
+    } catch (err: any) {
+      console.error('[Supabase] Google OAuth error in AuthModal:', err);
+      setErrorMessage(err?.message || 'Google sign-in failed. Please try again.');
       setIsSubmitting(false);
-      onLogin(user, comp);
-      onClose();
-    }, 600);
+    }
   };
 
   const handleQuickPersona = (companyIdx: number, role: 'super_admin' | 'technician') => {
@@ -112,11 +108,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           <button onClick={onClose} className="text-slate-400 hover:text-white p-2">✕</button>
         </div>
 
+        {errorMessage && (
+          <div className="p-3 mb-4 rounded-xl bg-red-950/40 border border-red-800/60 text-red-400 text-xs font-semibold">
+            {errorMessage}
+          </div>
+        )}
+
         {/* Google OAuth Button */}
         <button
+          type="button"
           onClick={handleGoogleOAuth}
           disabled={isSubmitting}
-          className="w-full py-3 px-4 rounded-2xl bg-[#0d1117] hover:bg-slate-800 border border-slate-700 text-white font-bold text-xs uppercase tracking-wider transition flex items-center justify-center gap-3 mb-4 shadow"
+          className="w-full py-3 px-4 rounded-2xl bg-[#0d1117] hover:bg-slate-800 border border-slate-700 text-white font-bold text-xs uppercase tracking-wider transition flex items-center justify-center gap-3 mb-4 shadow active:scale-[0.99] disabled:opacity-60"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -124,7 +127,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
             <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
           </svg>
-          <span>Continue with Google</span>
+          <span>{isSubmitting ? 'Connecting to Google...' : 'Sign in with Google'}</span>
         </button>
 
         <div className="relative flex py-2 items-center mb-4">

@@ -396,30 +396,75 @@ const App: React.FC = () => {
 
   // Check Supabase session on mount and bind strictly to profiles.company_id
   useEffect(() => {
+    const handleAuthSession = async (sessionUser: any) => {
+      if (!sessionUser?.id) return;
+      try {
+        const { profile, company } = await fetchUserProfileAndCompany(sessionUser.id, companies);
+        if (profile?.company_id && company) {
+          const staffUser: StaffUser = {
+            uid: sessionUser.id,
+            companyId: profile.company_id, // Strictly pulled from profiles.company_id
+            email: sessionUser.email || '',
+            name: profile.full_name || sessionUser.user_metadata?.full_name || sessionUser.email?.split('@')[0],
+            role: profile.role === 'technician' ? 'technician' : 'super_admin',
+            specialty: profile.role === 'technician' ? 'Field Technician' : 'Operations & Management',
+            isWorking: profile.role === 'technician',
+          };
+          setCurrentOperator(staffUser);
+          setCompanies(prev => prev.some(c => c.id === company.id) ? prev : [company, ...prev]);
+        } else {
+          // If first-time OAuth user with no profile, upsert default profile in Supabase
+          const defaultComp = companies[0] || INITIAL_COMPANIES[0];
+          const fullName = sessionUser.user_metadata?.full_name || sessionUser.user_metadata?.name || sessionUser.email?.split('@')[0] || 'Google User';
+          try {
+            await supabase.from('profiles').upsert({
+              id: sessionUser.id,
+              company_id: defaultComp.id,
+              full_name: fullName,
+              role: 'owner',
+            });
+          } catch (err) {
+            console.warn('[Supabase] Profile auto-creation notice:', err);
+          }
+          const staffUser: StaffUser = {
+            uid: sessionUser.id,
+            companyId: defaultComp.id,
+            email: sessionUser.email || '',
+            name: fullName,
+            role: 'super_admin',
+            specialty: 'Operations & Management',
+            isWorking: false,
+          };
+          setCurrentOperator(staffUser);
+        }
+      } catch (e) {
+        console.warn('[Supabase] Auth session resolution error:', e);
+      }
+    };
+
     const checkSupabaseSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
-          const { profile, company } = await fetchUserProfileAndCompany(session.user.id, companies);
-          if (profile?.company_id && company) {
-            const staffUser: StaffUser = {
-              uid: session.user.id,
-              companyId: profile.company_id, // Strictly pulled from profiles.company_id
-              email: session.user.email || '',
-              name: profile.full_name || session.user.email?.split('@')[0],
-              role: profile.role === 'technician' ? 'technician' : 'super_admin',
-              specialty: profile.role === 'technician' ? 'Field Technician' : 'Operations & Management',
-              isWorking: profile.role === 'technician',
-            };
-            setCurrentOperator(staffUser);
-            setCompanies(prev => prev.some(c => c.id === company.id) ? prev : [company, ...prev]);
-          }
+          await handleAuthSession(session.user);
         }
       } catch (e) {
         console.warn('[Supabase] Initial session check notice:', e);
       }
     };
+
     checkSupabaseSession();
+
+    // Listen to OAuth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user && (event === 'SIGNED_IN' || event === 'USER_UPDATED')) {
+        await handleAuthSession(session.user);
+      }
+    });
+
+    return () => {
+      subscription?.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {

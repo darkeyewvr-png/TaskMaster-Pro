@@ -357,3 +357,29 @@ export async function signUpWithSupabase(
 
   return { user: staffUser, company: companyModel };
 }
+
+/**
+ * Sign in with Google using Supabase's signInWithOAuth method.
+ * Redirects back to https://www.taskmasterpro.co.za
+ */
+export async function signInWithGoogleOAuth(
+  redirectTo = 'https://www.taskmasterpro.co.za'
+): Promise<{ data: { provider: string; url: string | null } | null; error: Error | null }> {
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo,
+    },
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  if (data?.url && typeof window !== 'undefined') {
+    window.location.href = data.url;
+  }
+
+  return { data, error: null };
+}
+
